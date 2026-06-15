@@ -1,9 +1,14 @@
+import { existsSync, mkdirSync } from "node:fs";
+import { extname, resolve } from "node:path";
+import { randomUUID } from "node:crypto";
 import { Router } from "express";
+import multer from "multer";
 import { z } from "zod";
 import { db } from "../db/index.js";
+import { env } from "../lib/env.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { notFound } from "../lib/errors.js";
+import { badRequest, notFound } from "../lib/errors.js";
 import {
   toPublicBook,
   toPublicChapter,
@@ -11,6 +16,26 @@ import {
   type ChapterRow,
   type QuizRow,
 } from "../types.js";
+
+const pdfDir = resolve(env.pdfDir);
+const pdfUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      if (!existsSync(pdfDir)) {
+        mkdirSync(pdfDir, { recursive: true });
+      }
+      cb(null, pdfDir);
+    },
+    filename: (_req, file, cb) => {
+      const ext = extname(file.originalname).toLowerCase() || ".pdf";
+      cb(null, `upload-${randomUUID()}${ext}`);
+    },
+  }),
+  limits: { fileSize: 100 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    cb(null, file.mimetype === "application/pdf");
+  },
+});
 
 export const booksRouter = Router();
 
@@ -174,6 +199,79 @@ booksRouter.post(
           chapter.contentUr,
         );
       });
+      return bookId;
+    })();
+
+    const book = db
+      .prepare("SELECT * FROM books WHERE id = ?")
+      .get(created) as BookRow;
+    res.status(201).json({ book: toPublicBook(book) });
+  }),
+);
+
+const catalogUploadSchema = z.object({
+  titleEn: z.string().trim().min(1).max(200),
+  titleUr: z.string().trim().max(200).default(""),
+  subjectEn: z.string().trim().min(1).max(80),
+  subjectUr: z.string().trim().max(80).default(""),
+  grade: z.coerce.number().int().min(1).max(12),
+  board: z.string().trim().min(1).max(40).default("FBISE"),
+  author: z.string().trim().max(120).default(""),
+  descriptionEn: z.string().max(2000).default(""),
+  descriptionUr: z.string().max(2000).default(""),
+  coverColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Use a hex color like #2563eb")
+    .default("#2563eb"),
+  contentEn: z.string().max(20000).default(""),
+  contentUr: z.string().max(20000).default(""),
+});
+
+// Create a book or note from the teacher catalog form, optionally with a PDF.
+booksRouter.post(
+  "/upload",
+  requireRole("teacher", "admin"),
+  pdfUpload.single("pdf"),
+  asyncHandler(async (req, res) => {
+    const data = catalogUploadSchema.parse(req.body);
+    const pdfFilename = req.file?.filename ?? null;
+    if (!pdfFilename && !data.contentEn.trim()) {
+      throw badRequest("Attach a PDF file or provide note content");
+    }
+
+    const created = db.transaction(() => {
+      const result = db
+        .prepare(
+          `INSERT INTO books
+            (title_en, title_ur, subject_en, subject_ur, grade, board, author, description_en, description_ur, cover_color, pdf_path)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          data.titleEn,
+          data.titleUr,
+          data.subjectEn,
+          data.subjectUr,
+          data.grade,
+          data.board,
+          data.author,
+          data.descriptionEn,
+          data.descriptionUr,
+          data.coverColor,
+          pdfFilename,
+        );
+      const bookId = Number(result.lastInsertRowid);
+      if (data.contentEn.trim() || data.contentUr.trim()) {
+        db.prepare(
+          `INSERT INTO chapters (book_id, position, title_en, title_ur, content_en, content_ur)
+           VALUES (?, 0, ?, ?, ?, ?)`,
+        ).run(
+          bookId,
+          data.titleEn,
+          data.titleUr,
+          data.contentEn,
+          data.contentUr,
+        );
+      }
       return bookId;
     })();
 

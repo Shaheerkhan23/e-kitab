@@ -23,6 +23,7 @@ export interface Book {
   descriptionEn: string;
   descriptionUr: string;
   coverColor: string;
+  pdfUrl: string | null;
   createdAt: string;
 }
 

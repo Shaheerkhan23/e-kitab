@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { pick, useI18n } from "../i18n";
@@ -9,6 +10,18 @@ interface BookResponse {
   book: Book;
   chapters: Chapter[];
   quizzes: QuizSummary[];
+}
+
+// Give every book its own reader look by rotating through a set of themes.
+const READER_THEMES = [
+  "reader-theme-serif",
+  "reader-theme-modern",
+  "reader-theme-warm",
+  "reader-theme-mono",
+];
+
+function readerThemeClass(bookId: number): string {
+  return READER_THEMES[bookId % READER_THEMES.length];
 }
 
 export function ReaderPage() {
@@ -140,12 +153,46 @@ export function ReaderPage() {
     setHighlights((prev) => prev.filter((h) => h.id !== highlightId));
   };
 
-  if (!data || !chapter) return <div className="spinner" />;
+  if (!data) return <div className="spinner" />;
+
+  const book = data.book;
+  const themeClass = readerThemeClass(book.id);
+  const accentStyle = {
+    "--book-accent": book.coverColor,
+  } as CSSProperties;
+
+  if (book.pdfUrl) {
+    return (
+      <div className={`reader reader-pdf ${themeClass}`} style={accentStyle}>
+        <div className="reader-toolbar">
+          <Link to={`/books/${id}`} className="back-link">
+            {lang === "ur" ? "\u2192 " : "\u2190 "}
+            {pick(book, "title", lang)}
+          </Link>
+          <a
+            className="btn-ghost small"
+            href={book.pdfUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t("openPdf")}
+          </a>
+        </div>
+        <iframe
+          className="pdf-frame"
+          title={pick(book, "title", lang)}
+          src={book.pdfUrl}
+        />
+      </div>
+    );
+  }
+
+  if (!chapter) return <div className="spinner" />;
 
   const quiz = data.quizzes[0];
 
   return (
-    <div className="reader">
+    <div className={`reader ${themeClass}`} style={accentStyle}>
       <div className="reader-toolbar">
         <Link to={`/books/${id}`} className="back-link">
           {lang === "ur" ? "\u2192 " : "\u2190 "}

@@ -54,6 +54,7 @@ export function BookDetailPage() {
             <span className="badge light">
               {t("grade")} {book.grade}
             </span>
+            {book.pdfUrl && <span className="badge light">{t("pdfBook")}</span>}
           </div>
           <p>{pick(book, "description", lang)}</p>
           {book.author && <p className="muted">{book.author}</p>}
@@ -63,18 +64,20 @@ export function BookDetailPage() {
         </div>
       </div>
 
-      <section>
-        <h2>{t("chapters")}</h2>
-        <ol className="chapter-list">
-          {chapters.map((chapter) => (
-            <li key={chapter.id}>
-              <Link to={`/books/${book.id}/read?chapter=${chapter.id}`}>
-                {pick(chapter, "title", lang)}
-              </Link>
-            </li>
-          ))}
-        </ol>
-      </section>
+      {chapters.length > 0 && (
+        <section>
+          <h2>{t("chapters")}</h2>
+          <ol className="chapter-list">
+            {chapters.map((chapter) => (
+              <li key={chapter.id}>
+                <Link to={`/books/${book.id}/read?chapter=${chapter.id}`}>
+                  {pick(chapter, "title", lang)}
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       {quizzes.length > 0 && (
         <section>

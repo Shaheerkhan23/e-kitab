@@ -13,6 +13,7 @@ export const env = {
   jwtSecret: required("JWT_SECRET", "dev-insecure-secret-change-me"),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "7d",
   databasePath: process.env.DATABASE_PATH ?? "./data/app.sqlite",
+  pdfDir: process.env.PDF_DIR ?? "./content/pdfs",
   corsOrigin: (process.env.CORS_ORIGIN ?? "http://localhost:5173")
     .split(",")
     .map((origin) => origin.trim())

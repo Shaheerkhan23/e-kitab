@@ -24,6 +24,7 @@ export interface BookRow {
   description_en: string;
   description_ur: string;
   cover_color: string;
+  pdf_path: string | null;
   created_at: string;
 }
 
@@ -86,6 +87,7 @@ export interface PublicBook {
   descriptionEn: string;
   descriptionUr: string;
   coverColor: string;
+  pdfUrl: string | null;
   createdAt: string;
 }
 
@@ -135,6 +137,7 @@ export function toPublicBook(row: BookRow): PublicBook {
     descriptionEn: row.description_en,
     descriptionUr: row.description_ur,
     coverColor: row.cover_color,
+    pdfUrl: row.pdf_path ? `/api/pdfs/${row.pdf_path}` : null,
     createdAt: row.created_at,
   };
 }
