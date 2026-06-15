@@ -43,6 +43,7 @@ export function migrate(database: Database.Database = db): void {
       description_en TEXT NOT NULL DEFAULT '',
       description_ur TEXT NOT NULL DEFAULT '',
       cover_color TEXT NOT NULL DEFAULT '#2563eb',
+      pdf_path TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
@@ -152,6 +153,14 @@ export function migrate(database: Database.Database = db): void {
     );
     CREATE INDEX IF NOT EXISTS idx_parent_children_parent ON parent_children(parent_id);
   `);
+
+  // Lightweight migrations for databases created before a column existed.
+  const bookColumns = database
+    .prepare("PRAGMA table_info(books)")
+    .all() as { name: string }[];
+  if (!bookColumns.some((c) => c.name === "pdf_path")) {
+    database.exec("ALTER TABLE books ADD COLUMN pdf_path TEXT");
+  }
 }
 
 migrate();

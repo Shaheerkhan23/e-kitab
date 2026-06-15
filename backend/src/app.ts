@@ -1,3 +1,5 @@
+import { existsSync, mkdirSync } from "node:fs";
+import { resolve } from "node:path";
 import cors from "cors";
 import express from "express";
 import { env } from "./lib/env.js";
@@ -21,6 +23,12 @@ export function createApp(): express.Express {
     }),
   );
   app.use(express.json());
+
+  const pdfDir = resolve(env.pdfDir);
+  if (!existsSync(pdfDir)) {
+    mkdirSync(pdfDir, { recursive: true });
+  }
+  app.use("/api/pdfs", express.static(pdfDir));
 
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });

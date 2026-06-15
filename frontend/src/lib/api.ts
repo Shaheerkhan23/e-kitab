@@ -62,3 +62,27 @@ export async function api<T>(
   }
   return data as T;
 }
+
+/** Send a multipart/form-data request (used for file uploads). */
+export async function apiUpload<T>(path: string, form: FormData): Promise<T> {
+  const headers: Record<string, string> = {};
+  const token = getToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`/api${path}`, {
+    method: "POST",
+    headers,
+    body: form,
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message =
+      (data && typeof data.error === "string" && data.error) ||
+      "Something went wrong";
+    throw new ApiError(response.status, message);
+  }
+  return data as T;
+}

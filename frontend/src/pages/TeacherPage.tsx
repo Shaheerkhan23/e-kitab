@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { api, apiUpload } from "../lib/api";
 import { useI18n } from "../i18n";
 import type {
   Book,
@@ -33,6 +33,9 @@ export function TeacherPage() {
   const [dueDate, setDueDate] = useState("");
   const [error, setError] = useState("");
 
+  const [boards, setBoards] = useState<string[]>([]);
+  const [catalogOpen, setCatalogOpen] = useState(false);
+
   const load = () => {
     api<{ stats: Overview }>("/teacher/overview").then((d) =>
       setOverview(d.stats),
@@ -46,6 +49,9 @@ export function TeacherPage() {
     api<{ books: Book[] }>("/books").then((d) => setBooks(d.books));
     api<{ quizzes: QuizListItem[] }>("/teacher/quizzes").then((d) =>
       setQuizzes(d.quizzes),
+    );
+    api<{ boards: string[] }>("/books/filters").then((d) =>
+      setBoards(d.boards),
     );
   };
 
@@ -88,7 +94,12 @@ export function TeacherPage() {
 
   return (
     <div className="page">
-      <h1>{t("teacherPanel")}</h1>
+      <div className="page-head">
+        <h1>{t("teacherPanel")}</h1>
+        <button className="btn-primary" onClick={() => setCatalogOpen(true)}>
+          {`+ ${t("addToCatalog")}`}
+        </button>
+      </div>
 
       {overview && (
         <div className="stat-grid">
@@ -248,6 +259,17 @@ export function TeacherPage() {
         </section>
       </div>
 
+      {catalogOpen && (
+        <CatalogModal
+          boards={boards}
+          onClose={() => setCatalogOpen(false)}
+          onSaved={() => {
+            setCatalogOpen(false);
+            load();
+          }}
+        />
+      )}
+
       {detailOpen && (
         <div className="modal-backdrop" onClick={() => setDetailOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -309,6 +331,168 @@ export function TeacherPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+interface CatalogModalProps {
+  boards: string[];
+  onClose: () => void;
+  onSaved: () => void;
+}
+
+const BOARD_OPTIONS = ["PTB", "FBISE", "BISEP"];
+
+function CatalogModal({ boards, onClose, onSaved }: CatalogModalProps) {
+  const { t } = useI18n();
+  const boardChoices = Array.from(new Set([...BOARD_OPTIONS, ...boards]));
+
+  const [titleEn, setTitleEn] = useState("");
+  const [titleUr, setTitleUr] = useState("");
+  const [subjectEn, setSubjectEn] = useState("");
+  const [grade, setGrade] = useState("10");
+  const [board, setBoard] = useState(boardChoices[0] ?? "FBISE");
+  const [author, setAuthor] = useState("");
+  const [descriptionEn, setDescriptionEn] = useState("");
+  const [coverColor, setCoverColor] = useState("#2563eb");
+  const [contentEn, setContentEn] = useState("");
+  const [pdf, setPdf] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSaving(true);
+    try {
+      const form = new FormData();
+      form.append("titleEn", titleEn);
+      form.append("titleUr", titleUr);
+      form.append("subjectEn", subjectEn);
+      form.append("grade", grade);
+      form.append("board", board);
+      form.append("author", author);
+      form.append("descriptionEn", descriptionEn);
+      form.append("coverColor", coverColor);
+      form.append("contentEn", contentEn);
+      if (pdf) form.append("pdf", pdf);
+      await apiUpload("/books/upload", form);
+      onSaved();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <h2>{t("newBookOrNote")}</h2>
+          <button className="btn-ghost small" onClick={onClose}>
+            {t("close")}
+          </button>
+        </div>
+        {error && <div className="alert-error">{error}</div>}
+        <form className="stacked-form" onSubmit={submit}>
+          <label>
+            {t("titleEnLabel")}
+            <input
+              value={titleEn}
+              onChange={(e) => setTitleEn(e.target.value)}
+              required
+            />
+          </label>
+          <label>
+            {t("titleUrLabel")}
+            <input value={titleUr} onChange={(e) => setTitleUr(e.target.value)} />
+          </label>
+          <div className="form-row">
+            <label>
+              {t("subject")}
+              <input
+                value={subjectEn}
+                onChange={(e) => setSubjectEn(e.target.value)}
+                required
+              />
+            </label>
+            <label>
+              {t("grade")}
+              <input
+                type="number"
+                min={1}
+                max={12}
+                value={grade}
+                onChange={(e) => setGrade(e.target.value)}
+                required
+              />
+            </label>
+          </div>
+          <div className="form-row">
+            <label>
+              {t("board")}
+              <select value={board} onChange={(e) => setBoard(e.target.value)}>
+                {boardChoices.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              {t("coverColor")}
+              <input
+                type="color"
+                value={coverColor}
+                onChange={(e) => setCoverColor(e.target.value)}
+              />
+            </label>
+          </div>
+          <label>
+            {t("author")} <span className="muted small">({t("optional")})</span>
+            <input value={author} onChange={(e) => setAuthor(e.target.value)} />
+          </label>
+          <label>
+            {t("description")}{" "}
+            <span className="muted small">({t("optional")})</span>
+            <input
+              value={descriptionEn}
+              onChange={(e) => setDescriptionEn(e.target.value)}
+            />
+          </label>
+          <label>
+            {t("pdfFile")} <span className="muted small">({t("optional")})</span>
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => setPdf(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          <label>
+            {t("noteContent")}{" "}
+            <span className="muted small">({t("optional")})</span>
+            <textarea
+              rows={4}
+              value={contentEn}
+              onChange={(e) => setContentEn(e.target.value)}
+            />
+          </label>
+          <p className="muted small">{t("noteContentHint")}</p>
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={onClose}
+              disabled={saving}
+            >
+              {t("cancel")}
+            </button>
+            <button className="btn-primary" type="submit" disabled={saving}>
+              {saving ? t("saving") : t("create")}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

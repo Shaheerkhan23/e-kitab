@@ -99,6 +99,29 @@ const strings: Dict = {
   close: { en: "Close", ur: "\u0628\u0646\u062f \u06a9\u0631\u06cc\u06ba" },
   quiz: { en: "Quiz", ur: "\u06a9\u0648\u0626\u0632" },
   optional: { en: "optional", ur: "\u0627\u062e\u062a\u06cc\u0627\u0631\u06cc" },
+  openPdf: { en: "Open PDF", ur: "\u067e\u06cc \u0688\u06cc \u0627\u06cc\u0641 \u06a9\u06be\u0648\u0644\u06cc\u06ba" },
+  pdfBook: { en: "PDF book", ur: "\u067e\u06cc \u0688\u06cc \u0627\u06cc\u0641 \u06a9\u062a\u0627\u0628" },
+  addToCatalog: { en: "Add to catalog", ur: "\u06a9\u06cc\u0679\u0644\u0627\u06af \u0645\u06cc\u06ba \u0634\u0627\u0645\u0644 \u06a9\u0631\u06cc\u06ba" },
+  newBookOrNote: {
+    en: "Add a book or note",
+    ur: "\u06a9\u062a\u0627\u0628 \u06cc\u0627 \u0646\u0648\u0679 \u0634\u0627\u0645\u0644 \u06a9\u0631\u06cc\u06ba",
+  },
+  titleEnLabel: { en: "Title (English)", ur: "\u0639\u0646\u0648\u0627\u0646 (\u0627\u0646\u06af\u0631\u06cc\u0632\u06cc)" },
+  titleUrLabel: { en: "Title (Urdu)", ur: "\u0639\u0646\u0648\u0627\u0646 (\u0627\u0631\u062f\u0648)" },
+  subject: { en: "Subject", ur: "\u0645\u0636\u0645\u0648\u0646" },
+  board: { en: "Board", ur: "\u0628\u0648\u0631\u0688" },
+  author: { en: "Author", ur: "\u0645\u0635\u0646\u0641" },
+  description: { en: "Description", ur: "\u062a\u0641\u0635\u06cc\u0644" },
+  coverColor: { en: "Cover color", ur: "\u0633\u0631\u0648\u0631\u0642 \u06a9\u0627 \u0631\u0646\u06af" },
+  pdfFile: { en: "PDF file", ur: "\u067e\u06cc \u0688\u06cc \u0627\u06cc\u0641 \u0641\u0627\u0626\u0644" },
+  noteContent: { en: "Note content", ur: "\u0646\u0648\u0679 \u06a9\u0627 \u0645\u062a\u0646" },
+  noteContentHint: {
+    en: "Attach a PDF, or type note content for a text book.",
+    ur: "\u067e\u06cc \u0688\u06cc \u0627\u06cc\u0641 \u0644\u06af\u0627\u0626\u06cc\u06ba \u06cc\u0627 \u0645\u062a\u0646 \u06a9\u062a\u0627\u0628 \u06a9\u06d2 \u0644\u06cc\u06d2 \u0646\u0648\u0679 \u0644\u06a9\u06be\u06cc\u06ba\u06d4",
+  },
+  saving: { en: "Saving...", ur: "\u0645\u062d\u0641\u0648\u0638 \u06c1\u0648 \u0631\u06c1\u0627 \u06c1\u06d2..." },
+  bookAdded: { en: "Book added to the catalog.", ur: "\u06a9\u062a\u0627\u0628 \u06a9\u06cc\u0679\u0644\u0627\u06af \u0645\u06cc\u06ba \u0634\u0627\u0645\u0644 \u06c1\u0648 \u06af\u0626\u06cc\u06d4" },
+  cancel: { en: "Cancel", ur: "\u0645\u0646\u0633\u0648\u062e" },
 };
 
 interface I18nContextValue {
