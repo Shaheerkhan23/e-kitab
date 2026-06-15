@@ -7,6 +7,7 @@ import { ApiError } from "../lib/api";
 const demoAccounts = [
   { label: "Student", email: "student@ekitab.pk" },
   { label: "Teacher", email: "teacher@ekitab.pk" },
+  { label: "Parent", email: "parent@ekitab.pk" },
   { label: "Admin", email: "admin@ekitab.pk" },
 ];
 

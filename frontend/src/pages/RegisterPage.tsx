@@ -11,8 +11,11 @@ export function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"student" | "teacher">("student");
+  const [role, setRole] = useState<"student" | "teacher" | "parent">(
+    "student",
+  );
   const [grade, setGrade] = useState("5");
+  const [childEmail, setChildEmail] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -31,6 +34,8 @@ export function RegisterPage() {
         password,
         role,
         grade: role === "student" ? Number(grade) : undefined,
+        childEmail:
+          role === "parent" && childEmail.trim() ? childEmail.trim() : undefined,
         preferredLanguage: lang,
       });
       navigate("/library");
@@ -86,10 +91,13 @@ export function RegisterPage() {
             {t("role")}
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value as "student" | "teacher")}
+              onChange={(e) =>
+                setRole(e.target.value as "student" | "teacher" | "parent")
+              }
             >
               <option value="student">{t("student")}</option>
               <option value="teacher">{t("teacher")}</option>
+              <option value="parent">{t("parent")}</option>
             </select>
           </label>
           {role === "student" && (
@@ -102,6 +110,18 @@ export function RegisterPage() {
                   </option>
                 ))}
               </select>
+            </label>
+          )}
+          {role === "parent" && (
+            <label>
+              {t("childEmail")}
+              <input
+                type="email"
+                value={childEmail}
+                onChange={(e) => setChildEmail(e.target.value)}
+                placeholder="student@ekitab.pk"
+              />
+              <span className="field-hint">{t("linkChildHint")}</span>
             </label>
           )}
           <button className="btn-primary" type="submit" disabled={busy}>

@@ -288,6 +288,13 @@ const demoUsers = [
     role: "student" as const,
     grade: 8,
   },
+  {
+    email: "parent@ekitab.pk",
+    name: "Bushra Khan",
+    password: "Password123",
+    role: "parent" as const,
+    grade: null,
+  },
 ];
 
 export function seed(): void {
@@ -305,9 +312,17 @@ export function seed(): void {
     `INSERT INTO users (email, name, password_hash, role, grade, preferred_language)
      VALUES (?, ?, ?, ?, ?, 'en')`,
   );
+  const userIdByEmail = new Map<string, number>();
   for (const user of demoUsers) {
     const hash = bcrypt.hashSync(user.password, 10);
-    insertUser.run(user.email, user.name, hash, user.role, user.grade);
+    const result = insertUser.run(
+      user.email,
+      user.name,
+      hash,
+      user.role,
+      user.grade,
+    );
+    userIdByEmail.set(user.email, Number(result.lastInsertRowid));
   }
 
   const insertBook = db.prepare(
@@ -326,6 +341,9 @@ export function seed(): void {
     `INSERT INTO questions (quiz_id, position, prompt_en, prompt_ur, options_en, options_ur, correct_index)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
   );
+
+  const seededBooks: { bookId: number; quizId: number; questionCount: number }[] =
+    [];
 
   const seedAll = db.transaction(() => {
     for (const book of books) {
@@ -369,13 +387,122 @@ export function seed(): void {
           question.correctIndex,
         );
       });
+      seededBooks.push({
+        bookId,
+        quizId,
+        questionCount: book.quiz.questions.length,
+      });
     }
   });
   seedAll();
 
+  seedRelations(userIdByEmail, seededBooks);
+
   console.log(
     `Seeded ${books.length} books and ${demoUsers.length} demo users.`,
   );
+}
+
+function seedRelations(
+  userIdByEmail: Map<string, number>,
+  seededBooks: { bookId: number; quizId: number; questionCount: number }[],
+): void {
+  const ayesha = userIdByEmail.get("student@ekitab.pk");
+  const bilal = userIdByEmail.get("bilal@ekitab.pk");
+  const parent = userIdByEmail.get("parent@ekitab.pk");
+  const teacher = userIdByEmail.get("teacher@ekitab.pk");
+  if (!ayesha || !bilal || !parent || !teacher || seededBooks.length === 0) {
+    return;
+  }
+
+  const insertLink = db.prepare(
+    "INSERT OR IGNORE INTO parent_children (parent_id, child_id) VALUES (?, ?)",
+  );
+  const insertProgress = db.prepare(
+    `INSERT OR REPLACE INTO progress (user_id, book_id, last_chapter_id, percent, updated_at)
+     VALUES (?, ?, NULL, ?, datetime('now', ?))`,
+  );
+  const insertAttempt = db.prepare(
+    `INSERT INTO quiz_attempts (user_id, quiz_id, score, total, created_at)
+     VALUES (?, ?, ?, ?, datetime('now', ?))`,
+  );
+  const insertAssignment = db.prepare(
+    `INSERT INTO assignments (teacher_id, student_id, book_id, quiz_id, note, due_date)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+  );
+
+  const run = db.transaction(() => {
+    insertLink.run(parent, ayesha);
+    insertLink.run(parent, bilal);
+
+    // Ayesha: a few books in progress + quiz attempts
+    const aProgress = [85, 40, 100];
+    aProgress.forEach((percent, i) => {
+      const book = seededBooks[i % seededBooks.length];
+      insertProgress.run(ayesha, book.bookId, percent, `-${i + 1} days`);
+    });
+    const aScores = [
+      { idx: 0, score: 3 },
+      { idx: 1, score: 2 },
+      { idx: 2, score: 3 },
+    ];
+    aScores.forEach((s, i) => {
+      const book = seededBooks[s.idx % seededBooks.length];
+      insertAttempt.run(
+        ayesha,
+        book.quizId,
+        Math.min(s.score, book.questionCount),
+        book.questionCount,
+        `-${i + 1} days`,
+      );
+    });
+
+    // Bilal: lighter activity
+    insertProgress.run(bilal, seededBooks[0].bookId, 55, "-2 days");
+    insertProgress.run(
+      bilal,
+      seededBooks[Math.min(1, seededBooks.length - 1)].bookId,
+      20,
+      "-1 days",
+    );
+    insertAttempt.run(
+      bilal,
+      seededBooks[0].quizId,
+      Math.min(1, seededBooks[0].questionCount),
+      seededBooks[0].questionCount,
+      "-1 days",
+    );
+
+    // Teacher assignments
+    const dueSoon = new Date(Date.now() + 5 * 86400000)
+      .toISOString()
+      .slice(0, 10);
+    insertAssignment.run(
+      teacher,
+      ayesha,
+      seededBooks[Math.min(1, seededBooks.length - 1)].bookId,
+      null,
+      "Please read chapter 2 before Friday.",
+      dueSoon,
+    );
+    insertAssignment.run(
+      teacher,
+      ayesha,
+      null,
+      seededBooks[0].quizId,
+      "Complete this quiz for practice.",
+      dueSoon,
+    );
+    insertAssignment.run(
+      teacher,
+      bilal,
+      seededBooks[0].bookId,
+      null,
+      "Catch up on the first chapter.",
+      dueSoon,
+    );
+  });
+  run();
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

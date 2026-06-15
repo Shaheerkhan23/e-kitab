@@ -1,4 +1,4 @@
-export type Role = "student" | "teacher" | "admin";
+export type Role = "student" | "teacher" | "admin" | "parent";
 export type Language = "en" | "ur";
 
 export interface User {
@@ -149,6 +149,45 @@ export interface TeacherAssignment {
   studentId: number;
   bookTitleEn: string | null;
   quizTitleEn: string | null;
+}
+
+export interface ChildSummary {
+  id: number;
+  name: string;
+  email: string;
+  grade: number | null;
+  booksStarted: number;
+  avgProgress: number;
+  quizzesTaken: number;
+  avgScore: number;
+}
+
+export interface StudentProgressRow {
+  percent: number;
+  updatedAt: string;
+  titleEn: string;
+  subjectEn: string;
+}
+
+export interface StudentAttemptRow {
+  score: number;
+  total: number;
+  createdAt: string;
+  quizTitleEn: string;
+}
+
+export interface StudentDetail {
+  student: { id: number; name: string; email: string; grade: number | null };
+  progress: StudentProgressRow[];
+  attempts: StudentAttemptRow[];
+  assignments?: AssignmentItem[];
+}
+
+export interface QuizListItem {
+  id: number;
+  titleEn: string;
+  titleUr: string;
+  bookTitleEn: string;
 }
 
 export interface ChatSource {

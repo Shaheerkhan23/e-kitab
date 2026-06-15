@@ -76,6 +76,21 @@ teacherRouter.get(
   }),
 );
 
+teacherRouter.get(
+  "/quizzes",
+  asyncHandler(async (_req, res) => {
+    const quizzes = db
+      .prepare(
+        `SELECT q.id, q.title_en AS titleEn, q.title_ur AS titleUr,
+                b.title_en AS bookTitleEn
+         FROM quizzes q JOIN books b ON b.id = q.book_id
+         ORDER BY b.title_en ASC, q.id ASC`,
+      )
+      .all();
+    res.json({ quizzes });
+  }),
+);
+
 // ---- Assignments ----
 teacherRouter.get(
   "/assignments",

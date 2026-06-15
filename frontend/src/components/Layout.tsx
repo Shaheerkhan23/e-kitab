@@ -25,7 +25,12 @@ export function Layout() {
 
         <nav className="main-nav">
           <NavLink to="/library">{t("library")}</NavLink>
-          <NavLink to="/dashboard">{t("dashboard")}</NavLink>
+          {user?.role !== "parent" && (
+            <NavLink to="/dashboard">{t("dashboard")}</NavLink>
+          )}
+          {(user?.role === "parent" || user?.role === "admin") && (
+            <NavLink to="/parent">{t("parentPanel")}</NavLink>
+          )}
           {(user?.role === "teacher" || user?.role === "admin") && (
             <NavLink to="/teacher">{t("teacherPanel")}</NavLink>
           )}

@@ -10,6 +10,7 @@ import { ReaderPage } from "./pages/ReaderPage";
 import { QuizPage } from "./pages/QuizPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { TeacherPage } from "./pages/TeacherPage";
+import { ParentPage } from "./pages/ParentPage";
 import { AdminPage } from "./pages/AdminPage";
 import { ProfilePage } from "./pages/ProfilePage";
 
@@ -46,6 +47,14 @@ export function App() {
           element={
             <ProtectedRoute roles={["teacher", "admin"]}>
               <TeacherPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/parent"
+          element={
+            <ProtectedRoute roles={["parent", "admin"]}>
+              <ParentPage />
             </ProtectedRoute>
           }
         />

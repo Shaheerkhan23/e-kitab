@@ -21,6 +21,7 @@ adminRouter.get(
            (SELECT COUNT(*) FROM users) AS users,
            (SELECT COUNT(*) FROM users WHERE role = 'student') AS students,
            (SELECT COUNT(*) FROM users WHERE role = 'teacher') AS teachers,
+           (SELECT COUNT(*) FROM users WHERE role = 'parent') AS parents,
            (SELECT COUNT(*) FROM books) AS books,
            (SELECT COUNT(*) FROM quizzes) AS quizzes,
            (SELECT COUNT(*) FROM quiz_attempts) AS attempts`,
@@ -41,7 +42,7 @@ adminRouter.get(
 );
 
 const updateUserSchema = z.object({
-  role: z.enum(["student", "teacher", "admin"]).optional(),
+  role: z.enum(["student", "teacher", "admin", "parent"]).optional(),
   grade: z.coerce.number().int().min(1).max(12).nullable().optional(),
 });
 

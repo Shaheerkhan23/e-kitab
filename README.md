@@ -20,7 +20,10 @@ and the catalog.
 - **One-click summary** — extractive summary of any chapter.
 - **Interactive quizzes** — multiple-choice, auto-scored, with attempt history.
 - **Progress tracking & analytics** — reading progress and quiz dashboards.
-- **Teacher dashboard** — student roster, progress monitoring, and assignments.
+- **Teacher dashboard** — student roster, click a student to drill into their
+  full progress and quiz history, and assign books **or** quizzes.
+- **Parent portal** — parents link to their children and monitor each child's
+  progress, quiz scores, and assignments.
 - **Admin panel** — manage users (roles, grades) and view platform stats.
 - **Study assistant** — a rule-based chatbot that answers from book content.
 - **Seeded content** — sample bilingual Pakistani-curriculum books + demo
@@ -77,6 +80,7 @@ first run (`backend/data/app.sqlite`).
 | ------- | ------------------- | ------------- |
 | Student | `student@ekitab.pk` | `Password123` |
 | Teacher | `teacher@ekitab.pk` | `Password123` |
+| Parent  | `parent@ekitab.pk`  | `Password123` |
 | Admin   | `admin@ekitab.pk`   | `Password123` |
 
 ## Available scripts
@@ -116,7 +120,10 @@ All routes are under `/api`. Protected routes require an
 - `reader` — bookmarks, highlights, and reading `progress`
 - `quizzes` — `GET /quizzes/:id`, `POST /quizzes/:id/submit`, attempts, authoring
 - `student` — `GET /student/dashboard`
-- `teacher` — overview, students roster, assignments (role: teacher/admin)
+- `teacher` — overview, students roster, per-student detail, quizzes list,
+  assignments (role: teacher/admin)
+- `parent` — `GET /parent/children`, `GET /parent/children/:id` (role:
+  parent/admin)
 - `admin` — stats and user management (role: admin)
 - `chat` — `POST /chat` study assistant
 
