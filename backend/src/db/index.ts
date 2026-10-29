@@ -25,7 +25,7 @@ export function migrate(database: Database.Database = db): void {
       email TEXT NOT NULL UNIQUE,
       name TEXT NOT NULL,
       password_hash TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student','teacher','admin')),
+      role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student','teacher','admin','parent')),
       grade INTEGER,
       preferred_language TEXT NOT NULL DEFAULT 'en' CHECK (preferred_language IN ('en','ur')),
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -141,6 +141,16 @@ export function migrate(database: Database.Database = db): void {
     );
     CREATE INDEX IF NOT EXISTS idx_assignments_student ON assignments(student_id);
     CREATE INDEX IF NOT EXISTS idx_assignments_teacher ON assignments(teacher_id);
+
+    CREATE TABLE IF NOT EXISTS parent_children (
+      parent_id INTEGER NOT NULL,
+      child_id INTEGER NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (parent_id, child_id),
+      FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (child_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_parent_children_parent ON parent_children(parent_id);
   `);
 }
 

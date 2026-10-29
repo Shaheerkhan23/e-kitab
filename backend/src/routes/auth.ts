@@ -13,9 +13,10 @@ const registerSchema = z.object({
   email: z.string().trim().toLowerCase().email("A valid email is required"),
   name: z.string().trim().min(1, "Name is required").max(80),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  role: z.enum(["student", "teacher"]).default("student"),
+  role: z.enum(["student", "teacher", "parent"]).default("student"),
   grade: z.coerce.number().int().min(1).max(12).optional(),
   preferredLanguage: z.enum(["en", "ur"]).default("en"),
+  childEmail: z.string().trim().toLowerCase().email().optional(),
 });
 
 const loginSchema = z.object({
@@ -30,7 +31,7 @@ function tokenFor(user: UserRow): string {
 authRouter.post(
   "/register",
   asyncHandler(async (req, res) => {
-    const { email, name, password, role, grade, preferredLanguage } =
+    const { email, name, password, role, grade, preferredLanguage, childEmail } =
       registerSchema.parse(req.body);
 
     const existing = db
@@ -38,6 +39,17 @@ authRouter.post(
       .get(email);
     if (existing) {
       throw conflict("An account with that email already exists");
+    }
+
+    let childId: number | null = null;
+    if (role === "parent" && childEmail) {
+      const child = db
+        .prepare("SELECT id FROM users WHERE email = ? AND role = 'student'")
+        .get(childEmail) as { id: number } | undefined;
+      if (!child) {
+        throw notFound("No student account found with that child email");
+      }
+      childId = child.id;
     }
 
     const passwordHash = await hashPassword(password);
@@ -51,13 +63,20 @@ authRouter.post(
         name,
         passwordHash,
         role,
-        grade ?? null,
+        role === "student" ? grade ?? null : null,
         preferredLanguage,
       );
 
+    const newUserId = Number(result.lastInsertRowid);
+    if (childId !== null) {
+      db.prepare(
+        "INSERT OR IGNORE INTO parent_children (parent_id, child_id) VALUES (?, ?)",
+      ).run(newUserId, childId);
+    }
+
     const user = db
       .prepare("SELECT * FROM users WHERE id = ?")
-      .get(result.lastInsertRowid) as UserRow;
+      .get(newUserId) as UserRow;
 
     res.status(201).json({ token: tokenFor(user), user: toPublicUser(user) });
   }),

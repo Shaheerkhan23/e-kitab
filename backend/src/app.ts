@@ -7,6 +7,7 @@ import { readerRouter } from "./routes/reader.js";
 import { quizzesRouter } from "./routes/quizzes.js";
 import { studentRouter } from "./routes/student.js";
 import { teacherRouter } from "./routes/teacher.js";
+import { parentRouter } from "./routes/parent.js";
 import { adminRouter } from "./routes/admin.js";
 import { chatRouter } from "./routes/chat.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
@@ -31,6 +32,7 @@ export function createApp(): express.Express {
   app.use("/api/quizzes", quizzesRouter);
   app.use("/api/student", studentRouter);
   app.use("/api/teacher", teacherRouter);
+  app.use("/api/parent", parentRouter);
   app.use("/api/admin", adminRouter);
   app.use("/api/chat", chatRouter);
 

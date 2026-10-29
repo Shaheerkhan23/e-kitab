@@ -23,8 +23,9 @@ interface RegisterInput {
   email: string;
   name: string;
   password: string;
-  role: "student" | "teacher";
+  role: "student" | "teacher" | "parent";
   grade?: number;
+  childEmail?: string;
   preferredLanguage: Language;
 }
 

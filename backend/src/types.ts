@@ -1,4 +1,4 @@
-export type Role = "student" | "teacher" | "admin";
+export type Role = "student" | "teacher" | "admin" | "parent";
 export type Language = "en" | "ur";
 
 export interface UserRow {

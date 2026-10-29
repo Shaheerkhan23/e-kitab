@@ -8,6 +8,7 @@ interface Stats {
   users: number;
   students: number;
   teachers: number;
+  parents: number;
   books: number;
   quizzes: number;
   attempts: number;
@@ -56,6 +57,10 @@ export function AdminPage() {
             <span className="stat-label">{t("teacher")}</span>
           </div>
           <div className="stat-card">
+            <span className="stat-value">{stats.parents}</span>
+            <span className="stat-label">{t("parent")}</span>
+          </div>
+          <div className="stat-card">
             <span className="stat-value">{stats.books}</span>
             <span className="stat-label">{t("library")}</span>
           </div>
@@ -96,6 +101,7 @@ export function AdminPage() {
                     >
                       <option value="student">{t("student")}</option>
                       <option value="teacher">{t("teacher")}</option>
+                      <option value="parent">{t("parent")}</option>
                       <option value="admin">{t("admin")}</option>
                     </select>
                   </td>

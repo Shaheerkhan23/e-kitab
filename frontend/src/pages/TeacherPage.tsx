@@ -3,6 +3,8 @@ import { api } from "../lib/api";
 import { useI18n } from "../i18n";
 import type {
   Book,
+  QuizListItem,
+  StudentDetail,
   StudentSummary,
   TeacherAssignment,
 } from "../lib/types";
@@ -20,10 +22,14 @@ export function TeacherPage() {
   const [students, setStudents] = useState<StudentSummary[]>([]);
   const [assignments, setAssignments] = useState<TeacherAssignment[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
+  const [quizzes, setQuizzes] = useState<QuizListItem[]>([]);
 
   const [studentId, setStudentId] = useState("");
   const [bookId, setBookId] = useState("");
+  const [quizId, setQuizId] = useState("");
   const [note, setNote] = useState("");
+  const [detail, setDetail] = useState<StudentDetail | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [dueDate, setDueDate] = useState("");
   const [error, setError] = useState("");
 
@@ -38,9 +44,18 @@ export function TeacherPage() {
       setAssignments(d.assignments),
     );
     api<{ books: Book[] }>("/books").then((d) => setBooks(d.books));
+    api<{ quizzes: QuizListItem[] }>("/teacher/quizzes").then((d) =>
+      setQuizzes(d.quizzes),
+    );
   };
 
   useEffect(load, []);
+
+  const openStudent = (id: number) => {
+    setDetailOpen(true);
+    setDetail(null);
+    api<StudentDetail>(`/teacher/students/${id}`).then(setDetail);
+  };
 
   const createAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,15 +66,18 @@ export function TeacherPage() {
         body: {
           studentId: Number(studentId),
           bookId: bookId ? Number(bookId) : undefined,
+          quizId: quizId ? Number(quizId) : undefined,
           note,
           dueDate: dueDate || undefined,
         },
       });
       setNote("");
       setDueDate("");
+      setBookId("");
+      setQuizId("");
       load();
     } catch {
-      setError("Could not create assignment");
+      setError("Attach a book or a quiz and pick a student");
     }
   };
 
@@ -108,7 +126,11 @@ export function TeacherPage() {
             </thead>
             <tbody>
               {students.map((s) => (
-                <tr key={s.id}>
+                <tr
+                  key={s.id}
+                  className="clickable-row"
+                  onClick={() => openStudent(s.id)}
+                >
                   <td>
                     <strong>{s.name}</strong>
                     <div className="muted small">{s.email}</div>
@@ -170,6 +192,17 @@ export function TeacherPage() {
               </select>
             </label>
             <label>
+              {t("quiz")}
+              <select value={quizId} onChange={(e) => setQuizId(e.target.value)}>
+                <option value="">--</option>
+                {quizzes.map((q) => (
+                  <option key={q.id} value={q.id}>
+                    {q.titleEn} ({q.bookTitleEn})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
               {t("note")}
               <input value={note} onChange={(e) => setNote(e.target.value)} />
             </label>
@@ -214,6 +247,68 @@ export function TeacherPage() {
           )}
         </section>
       </div>
+
+      {detailOpen && (
+        <div className="modal-backdrop" onClick={() => setDetailOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            {!detail ? (
+              <div className="spinner" />
+            ) : (
+              <>
+                <div className="modal-head">
+                  <h2>{detail.student.name}</h2>
+                  <button
+                    className="btn-ghost small"
+                    onClick={() => setDetailOpen(false)}
+                  >
+                    {t("close")}
+                  </button>
+                </div>
+
+                <h3>{t("myProgress")}</h3>
+                {detail.progress.length === 0 ? (
+                  <p className="muted">{t("noData")}</p>
+                ) : (
+                  <ul className="progress-list">
+                    {detail.progress.map((p, i) => (
+                      <li key={i}>
+                        <div className="progress-row-head">
+                          <span>{p.titleEn}</span>
+                          <span>{p.percent}%</span>
+                        </div>
+                        <div className="progress-bar">
+                          <div
+                            className="progress-fill"
+                            style={{ width: `${p.percent}%` }}
+                          />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <h3>{t("recentQuizzes")}</h3>
+                {detail.attempts.length === 0 ? (
+                  <p className="muted">{t("noData")}</p>
+                ) : (
+                  <ul className="attempt-list">
+                    {detail.attempts.map((a, i) => (
+                      <li key={i}>
+                        <span>{a.quizTitleEn}</span>
+                        <span
+                          className={`pill ${a.score / a.total >= 0.6 ? "ok" : "no"}`}
+                        >
+                          {a.score}/{a.total}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

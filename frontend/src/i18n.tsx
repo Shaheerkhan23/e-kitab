@@ -86,6 +86,19 @@ const strings: Dict = {
   demoAccounts: { en: "Demo accounts", ur: "\u0688\u06cc\u0645\u0648 \u0627\u06a9\u0627\u0624\u0646\u0679\u0633" },
   language: { en: "\u0627\u0631\u062f\u0648", ur: "English" },
   noData: { en: "Nothing here yet.", ur: "\u0627\u0628\u06be\u06cc \u06a9\u0686\u06be \u0646\u06c1\u06cc\u06ba\u06d4" },
+  parent: { en: "Parent", ur: "\u0648\u0627\u0644\u062f" },
+  parentPanel: { en: "My children", ur: "\u0645\u06cc\u0631\u06d2 \u0628\u0686\u06d2" },
+  children: { en: "Children", ur: "\u0628\u0686\u06d2" },
+  childEmail: { en: "Child's student email", ur: "\u0628\u0686\u06d2 \u06a9\u0627 \u0637\u0627\u0644\u0628 \u0639\u0644\u0645 \u0627\u06cc \u0645\u06cc\u0644" },
+  linkChildHint: {
+    en: "Enter your child's student email to link their account.",
+    ur: "\u0627\u067e\u0646\u06d2 \u0628\u0686\u06d2 \u06a9\u0627 \u0637\u0627\u0644\u0628 \u0639\u0644\u0645 \u0627\u06cc \u0645\u06cc\u0644 \u062f\u0631\u062c \u06a9\u0631\u06cc\u06ba\u06d4",
+  },
+  noChildren: { en: "No linked children yet.", ur: "\u0627\u0628\u06be\u06cc \u06a9\u0648\u0626\u06cc \u0628\u0686\u06c1 \u0645\u0646\u0633\u0644\u06a9 \u0646\u06c1\u06cc\u06ba\u06d4" },
+  viewDetails: { en: "View details", ur: "\u062a\u0641\u0635\u06cc\u0644\u0627\u062a \u062f\u06cc\u06a9\u06be\u06cc\u06ba" },
+  close: { en: "Close", ur: "\u0628\u0646\u062f \u06a9\u0631\u06cc\u06ba" },
+  quiz: { en: "Quiz", ur: "\u06a9\u0648\u0626\u0632" },
+  optional: { en: "optional", ur: "\u0627\u062e\u062a\u06cc\u0627\u0631\u06cc" },
 };
 
 interface I18nContextValue {

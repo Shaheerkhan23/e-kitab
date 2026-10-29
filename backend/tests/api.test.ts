@@ -167,6 +167,101 @@ describe("role enforcement", () => {
   });
 });
 
+describe("seeded activity", () => {
+  it("returns populated dashboard for the seeded student", async () => {
+    const token = await login("student@ekitab.pk");
+    const res = await request(app)
+      .get("/api/student/dashboard")
+      .set("Authorization", `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.progress.length).toBeGreaterThan(0);
+    expect(res.body.attempts.length).toBeGreaterThan(0);
+    expect(res.body.assignments.length).toBeGreaterThan(0);
+    expect(res.body.stats.quizzesTaken).toBeGreaterThan(0);
+  });
+});
+
+describe("parent", () => {
+  it("lists linked children with progress stats", async () => {
+    const token = await login("parent@ekitab.pk");
+    const res = await request(app)
+      .get("/api/parent/children")
+      .set("Authorization", `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.children.length).toBeGreaterThan(0);
+    expect(res.body.children[0]).toHaveProperty("avgProgress");
+  });
+
+  it("returns a child's detailed progress and quiz history", async () => {
+    const token = await login("parent@ekitab.pk");
+    const list = await request(app)
+      .get("/api/parent/children")
+      .set("Authorization", `Bearer ${token}`);
+    const childId = list.body.children[0].id as number;
+    const detail = await request(app)
+      .get(`/api/parent/children/${childId}`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(detail.status).toBe(200);
+    expect(detail.body.student.id).toBe(childId);
+    expect(Array.isArray(detail.body.progress)).toBe(true);
+    expect(Array.isArray(detail.body.assignments)).toBe(true);
+  });
+
+  it("blocks parents from viewing an unlinked child", async () => {
+    const token = await login("parent@ekitab.pk");
+    const res = await request(app)
+      .get("/api/parent/children/99999")
+      .set("Authorization", `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  it("blocks students from parent routes", async () => {
+    const token = await login("student@ekitab.pk");
+    const res = await request(app)
+      .get("/api/parent/children")
+      .set("Authorization", `Bearer ${token}`);
+    expect(res.status).toBe(403);
+  });
+
+  it("registers a parent and links them to a child by email", async () => {
+    const res = await request(app).post("/api/auth/register").send({
+      email: "newparent@example.com",
+      name: "New Parent",
+      password: "password123",
+      role: "parent",
+      childEmail: "student@ekitab.pk",
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.user.role).toBe("parent");
+    const children = await request(app)
+      .get("/api/parent/children")
+      .set("Authorization", `Bearer ${res.body.token}`);
+    expect(children.body.children.length).toBe(1);
+    expect(children.body.children[0].email).toBe("student@ekitab.pk");
+  });
+});
+
+describe("teacher assignments", () => {
+  it("creates a quiz assignment and lists teacher quizzes", async () => {
+    const token = await login("teacher@ekitab.pk");
+    const quizzes = await request(app)
+      .get("/api/teacher/quizzes")
+      .set("Authorization", `Bearer ${token}`);
+    expect(quizzes.status).toBe(200);
+    expect(quizzes.body.quizzes.length).toBeGreaterThan(0);
+
+    const students = await request(app)
+      .get("/api/teacher/students")
+      .set("Authorization", `Bearer ${token}`);
+    const studentId = students.body.students[0].id as number;
+    const created = await request(app)
+      .post("/api/teacher/assignments")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ studentId, quizId: quizzes.body.quizzes[0].id, note: "Do this" });
+    expect(created.status).toBe(201);
+  });
+});
+
 describe("chat assistant", () => {
   it("answers questions from book content", async () => {
     const token = await login("student@ekitab.pk");
